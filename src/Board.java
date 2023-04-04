@@ -5,19 +5,48 @@ import stdlib.StdOut;
 
 // A data type to represent a board in the 8-puzzle game or its generalizations.
 public class Board {
-    int[][] tiles;
+
+    // length of the board
     int n;
+    // tiles in the board
+    int[][] tiles;
+    // Hemming distance
     int hamming;
+    // Manhattan distance
     int manhattan;
+    // position of the blank tile
     int blankPos;
 
     // Constructs a board from an n x n array; tiles[i][j] is the tile at row i and column j, with 0
     // denoting the blank tile.
     public Board(int[][] tiles) {
-        this.tiles = cloneTiles();
+        // initialized the variables
+        this.tiles = tiles;
         this.n = tiles.length;
         this.hamming = 0;
         this.manhattan = 0;
+
+        // uses a nested the for loop through the array
+        int value = 1;
+        for (int i = 0; i < tiles.length; i++) {
+            for (int j = 0; j < tiles[i].length; j++) {
+                // checks if the tiles is equal to the goal board
+                if (tiles[i][j] != value && tiles[i][j] != 0) {
+                    // counts and adds it to hamming
+                    hamming++;
+                }
+                value++;
+                // skips the first blank item
+                if (tiles[i][j] != 0) {
+                    // uses manhattan equation and stores into manhattan
+                    manhattan += Math.abs(i-(tiles[i][j] - 1) / n)+Math.abs(j-(tiles[i][j] -1) % n);
+                } else {
+                    // updates the blank positions
+                    blankPos = n * i + j + 1;
+                }
+            }
+        }
+
 
     }
 
@@ -28,61 +57,54 @@ public class Board {
 
     // Returns the tile at row i and column j of this board.
     public int tileAt(int i, int j) {
+        // returns the tiles
         return tiles[i][j];
     }
 
     // Returns Hamming distance between this board and the goal board.
     public int hamming() {
-
-        for(int i = 0; i < n; i++) {
-            for (int j = 0; j < n; i++) {
-                if (((tiles[i][j] + 1) % (n * n) != 0) && ((tiles[i][j] + 1) % (n * n) != tiles[i][j])) {
-                    hamming++;
-                }
-            }
-        }
         return hamming;
 
     }
 
     // Returns the Manhattan distance between this board and the goal board.
     public int manhattan() {
-        for(int i = 0; i < n; i++) {
-            for (int j = 0; j < n; i++) {
-                if (tiles[i][j] != 0) {
-                    manhattan += Math.abs(tiles[i][j] - 1 / (n - i)) + Math.abs(tiles[i][j] - 1 / (n - j));
-                } else {
-                    blankPos = n * i + j + 1;
-                }
-            }
-        }
         return manhattan;
     }
 
     // Returns true if this board is the goal board, and false otherwise.
     public boolean isGoal() {
-            return manhattan == 0;
-
+        // if hamming and goal is at 0
+        return manhattan == 0 && hamming == 0;
     }
 
     // Returns true if this board is solvable, and false otherwise.
     public boolean isSolvable() {
         int h = 0;
-        int[] rowMajorOrder = new int[n * n -1];
-        for(int i = 0; i < n; i++) {
+        int count = 0;
+        // Create an array of size n**2 − 1
+        int[] rowMajorOrder = new int[(n * n) - 1];
+        // uses a nested for loop through the array
+        for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                if(tiles[i][j] != 0) {
-                    rowMajorOrder[h++] = tiles[i][j];
+                // skips the first blank item
+                if (tiles[i][j] != 0 && n * i + j + 1 != blankPos) {
+                    rowMajorOrder[h] = tiles[i][j];
+                    h++;
+                } else {
+                    count = i;
                 }
+
             }
         }
-        long num = 0;
+        // Inversions.count() to compute the number of inversions in the array
         if (n % 2 != 0) {
-            num = Inversions.count(rowMajorOrder);
-            return num % 2 == 0;
+            return Inversions.count(rowMajorOrder) % 2 == 0;
+        } else {
+            return Inversions.count(rowMajorOrder) + count % 2 != 0;
 
         }
-        return num % 2 != 0;
+
 
 
 
@@ -90,40 +112,55 @@ public class Board {
 
     // Returns an iterable object containing the neighboring boards of this board.
     public Iterable<Board> neighbors() {
+        // Create a queue q of Board objects.
         LinkedQueue<Board> q = new LinkedQueue<Board>();
+        // iterations
         int i = (blankPos - 1) / n;
         int j = (blankPos - 1) % n;
 
-        if(i + 1 < n) {
+        if (i + 1 < n) {
+            // Clone the tiles of the board.
             int[][] clone = cloneTiles();
+            // Exchange an appropriate tile with the blank tile in the clone.
             int temp = clone[i+1][j];
             clone[i + 1][j] = clone[i][j];
             clone[i][j] = temp;
+            // Construct a Board object from the clone, and enqueue it into q
             q.enqueue(new Board(clone));
 
         }
 
-        if(i - 1 >= 0) {
+        if (i - 1 >= 0) {
+            // Clone the tiles of the board.
             int[][] clone = cloneTiles();
+            // Exchange an appropriate tile with the blank tile in the clone.
             int temp = clone[i - 1][j];
             clone[i - 1][j] = clone[i][j];
             clone[i][j] = temp;
+            // Construct a Board object from the clone, and enqueue it into q
             q.enqueue(new Board(clone));
         }
 
-        if(j + 1 < n) {
+        if (j + 1 < n) {
+            // Clone the tiles of the board.
             int[][] clone = cloneTiles();
+            // Exchange an appropriate tile with the blank tile in the clone.
             int temp = clone[i][j + 1];
             clone[i][j + 1] = clone[i][j];
             clone[i][j] = temp;
+            // Construct a Board object from the clone, and enqueue it into q
             q.enqueue(new Board(clone));
         }
 
-        if(j - 1 >= 0) {
+        if (j - 1 >= 0) {
+            // Clone the tiles of the board.
             int[][] clone = cloneTiles();
+            // Exchange an appropriate tile with the blank tile in the clone.
+
             int temp = clone[i][j - 1];
             clone[i][j - 1] = clone[i][j];
             clone[i][j] = temp;
+            // Construct a Board object from the clone, and enqueue it into q
             q.enqueue(new Board(clone));
         }
         return q;
@@ -141,7 +178,7 @@ public class Board {
             return false;
         }
 
-        for(int i = 0; i < n; i++) {
+        for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 if (this.tiles[i][j] != ((Board) other).tiles[i][j]) {
                     return false;
